@@ -156,6 +156,8 @@ namespace owds
           if (percepts_.at(current_prc_obj_id_).isInHand())
             percepts_.at(current_prc_obj_id_).removeFromHand();
 
+          percepts_.at(current_prc_obj_id_).unsetPose();
+
           current_prc_obj_id_ = "";
           prc_obj_id_++;
         }
