@@ -3,7 +3,7 @@
 
 #include "overworld/BasicTypes/Object.h"
 #include "overworld/BasicTypes/Agent.h"
-#include "overworld/Bullet/BulletClient.h"
+#include "overworld/Engine/Engine.h"
 #include "overworld/Perception/Modules/PerceptionModuleBase.h"
 
 #include "pr2_msgs/PressureState.h"
@@ -28,8 +28,8 @@ namespace owds
 
   private:
     Pr2GripperSide_e side_;
-    int pr2_left_tip_bullet_id_;
-    int pr2_right_tip_bullet_id_;
+    int pr2_left_tip_world_id_;
+    int pr2_right_tip_world_id_;
 
     bool is_init_;
     double left_tip_pressure_;
