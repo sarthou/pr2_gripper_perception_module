@@ -4,7 +4,7 @@
 
 #include <pluginlib/class_list_macros.h>
 
-#include "overworld/Utility/ShellDisplay.h"
+#include "overworld/Utils/ShellDisplay.h"
 
 namespace owds
 {
@@ -12,8 +12,8 @@ namespace owds
   Pr2GripperPerceptionModule::Pr2GripperPerceptionModule() : PerceptionModuleRosBase("", true)
   // We need to wait the initialization to know the topic name
   {
-    pr2_left_tip_bullet_id_ = -1;
-    pr2_right_tip_bullet_id_ = -1;
+    pr2_left_tip_world_id_ = -1;
+    pr2_right_tip_world_id_ = -1;
     side_ = PR2_GRIPER_UNDEFINED;
 
     is_init_ = false;
@@ -54,21 +54,15 @@ namespace owds
 
     setTopicName("pressure/" + std::string((side_ == PR2_GRIPPER_LEFT) ? "l" : "r") + "_gripper_motor");
 
-    auto p = bullet_client_->findJointAndLinkIndices(robot_bullet_id_);
-    // auto joint_name_id = p.first;
-    auto link_name_id = p.second;
-
     std::string left_finger_link = std::string((side_ == PR2_GRIPPER_LEFT) ? "l" : "r") + "_gripper_l_finger_tip_link";
     std::string right_finger_link = std::string((side_ == PR2_GRIPPER_LEFT) ? "l" : "r") + "_gripper_r_finger_tip_link";
 
-    if (link_name_id.find(left_finger_link) != link_name_id.end())
-      pr2_left_tip_bullet_id_ = link_name_id.at(left_finger_link);
-    else
+    pr2_left_tip_world_id_ = world_client_->getLinkId(robot_engine_id_, left_finger_link);
+    if(pr2_left_tip_world_id_ == -1)
       throw std::runtime_error("[" + module_name_ + "] link " + left_finger_link + " does not exist");
 
-    if (link_name_id.find(right_finger_link) != link_name_id.end())
-      pr2_right_tip_bullet_id_ = link_name_id.at(right_finger_link);
-    else
+    pr2_right_tip_world_id_ = world_client_->getLinkId(robot_engine_id_, right_finger_link);
+    if(pr2_right_tip_world_id_ == -1)
       throw std::runtime_error("[" + module_name_ + "] link " + left_finger_link + " does not exist");
 
     return true;
@@ -119,7 +113,7 @@ namespace owds
             percept.setSeen();
             percepts_.insert(std::make_pair(percept.id(), percept));
 
-            Hand *hand = nullptr;
+            Hand* hand = nullptr;
 
             if (side_ == PR2_GRIPPER_LEFT)
             {
@@ -134,6 +128,7 @@ namespace owds
 
             if (hand != nullptr)
             {
+              std::cout << "---------------------------------------------------------------> Pick Percept " << current_prc_obj_id_ << " with hand " << hand->id() << std::endl;
               percepts_.at(current_prc_obj_id_).setInHand(hand);
               percepts_.at(current_prc_obj_id_).updatePose(Pose()); // meaning the object is at the centrer of the hand
             }
@@ -149,12 +144,17 @@ namespace owds
       {
         if ((pressure_diff_left < -pressure_threshold_) && (pressure_diff_right < -pressure_threshold_))
         {
+          std::cout << "---------------------------------------------------------------> Release Percept " << current_prc_obj_id_ << std::endl;
           has_picked_ = false;
           percepts_.at(current_prc_obj_id_).setUnseen();
           auto hand = percepts_.at(current_prc_obj_id_).getHandIn();
 
           if (percepts_.at(current_prc_obj_id_).isInHand())
+          {
+            std::cout << "[Pr2GripperPerceptionModule] remove percept form hand " << current_prc_obj_id_ << std::endl;
             percepts_.at(current_prc_obj_id_).removeFromHand();
+            std::cout << "[Pr2GripperPerceptionModule] is in hand = " << percepts_.at(current_prc_obj_id_).isInHand() << std::endl;
+          }
 
           percepts_.at(current_prc_obj_id_).unsetPose();
 
@@ -184,15 +184,11 @@ namespace owds
 
   double Pr2GripperPerceptionModule::getGripperDistance()
   {
-    b3LinkState left_tip_link_state = bullet_client_->getLinkState(robot_bullet_id_, pr2_left_tip_bullet_id_);
-    double* left_pos = left_tip_link_state.m_worldLinkFramePosition;
-    double* left_rot = left_tip_link_state.m_worldLinkFrameOrientation;
-    Pose left_tip_pose({left_pos[0], left_pos[1], left_pos[2]}, {left_rot[0], left_rot[1], left_rot[2], left_rot[3]});
+    auto left_tip_link_state = world_client_->getBasePositionAndOrientation(pr2_left_tip_world_id_);
+    Pose left_tip_pose(left_tip_link_state.first, left_tip_link_state.second);
 
-    b3LinkState right_tip_link_state = bullet_client_->getLinkState(robot_bullet_id_, pr2_right_tip_bullet_id_);
-    double *right_pos = right_tip_link_state.m_worldLinkFramePosition;
-    double *right_rot = right_tip_link_state.m_worldLinkFrameOrientation;
-    Pose right_tip_pose({right_pos[0], right_pos[1], right_pos[2]}, {right_rot[0], right_rot[1], right_rot[2], right_rot[3]});
+    auto right_tip_link_state = world_client_->getBasePositionAndOrientation(pr2_right_tip_world_id_);
+    Pose right_tip_pose(right_tip_link_state.first, right_tip_link_state.second);
 
     return left_tip_pose.distanceTo(right_tip_pose) - 0.0275; // 0.0275 correspond to grippers offset
   }

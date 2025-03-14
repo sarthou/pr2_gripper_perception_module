@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(pr2_gripper_perception_module)
 
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++17)
 
 find_package(catkin REQUIRED COMPONENTS
   overworld
@@ -23,3 +23,5 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PUBLIC
                       ${catkin_LIBRARIES}
                       ${overworld_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC OWDS_ROS_VERSION=$ENV{ROS_VERSION})  
+                  
