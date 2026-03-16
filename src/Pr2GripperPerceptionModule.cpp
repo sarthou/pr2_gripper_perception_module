@@ -58,11 +58,11 @@ namespace owds
     std::string right_finger_link = std::string((side_ == PR2_GRIPPER_LEFT) ? "l" : "r") + "_gripper_r_finger_tip_link";
 
     pr2_left_tip_world_id_ = world_client_->getLinkId(robot_engine_id_, left_finger_link);
-    if(pr2_left_tip_world_id_ == -1)
+    if (pr2_left_tip_world_id_ == -1)
       throw std::runtime_error("[" + module_name_ + "] link " + left_finger_link + " does not exist");
 
     pr2_right_tip_world_id_ = world_client_->getLinkId(robot_engine_id_, right_finger_link);
-    if(pr2_right_tip_world_id_ == -1)
+    if (pr2_right_tip_world_id_ == -1)
       throw std::runtime_error("[" + module_name_ + "] link " + left_finger_link + " does not exist");
 
     return true;
@@ -113,7 +113,7 @@ namespace owds
             percept.setSeen();
             percepts_.insert(std::make_pair(percept.id(), percept));
 
-            Hand* hand = nullptr;
+            Hand *hand = nullptr;
 
             if (side_ == PR2_GRIPPER_LEFT)
             {

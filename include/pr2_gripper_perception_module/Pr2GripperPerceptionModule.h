@@ -1,10 +1,10 @@
 #ifndef OWDS_PR2GRIPPERPERCEPTIONMODULE_H
 #define OWDS_PR2GRIPPERPERCEPTIONMODULE_H
 
+#include "overworld/Perception/Modules/PerceptionModuleBase.h"
+// PerceptionModuleBase should be included first
 #include "overworld/BasicTypes/Object.h"
 #include "overworld/BasicTypes/Agent.h"
-#include "overworld/Engine/Engine.h"
-#include "overworld/Perception/Modules/PerceptionModuleBase.h"
 
 #include "pr2_msgs/PressureState.h"
 
